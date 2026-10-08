@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FedEx — Package Held at Customs</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #f4f0ea;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: #222;
+    }
+    .urlbar {
+      background: #ddd;
+      color: #444;
+      font-size: 12px;
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: ui-monospace, Consolas, monospace;
+    }
+    .wrap { max-width: 640px; margin: 0 auto; background: #fff; min-height: 100vh; }
+    header {
+      background: #4D148C;
+      color: #fff;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo {
+      width: 48px; height: 48px;
+      background: #FF6600;
+      color: #fff;
+      font-weight: 800;
+      font-size: 16px;
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    header h1 { margin: 0; font-size: 18px; }
+    header p { margin: 3px 0 0; font-size: 12px; opacity: 0.9; }
+    .stripe { height: 6px; background: #FF6600; }
+    main { padding: 24px; }
+    .track {
+      background: #f7f3ff;
+      border: 1px solid #e4d4ff;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+    h2 { margin: 0 0 10px; color: #4D148C; font-size: 20px; }
+    .lead { font-size: 14px; line-height: 1.6; margin: 0 0 18px; }
+    .fee {
+      font-size: 28px;
+      font-weight: 800;
+      color: #FF6600;
+      margin: 0 0 16px;
+    }
+    label { display: block; font-size: 13px; font-weight: 600; margin: 0 0 6px; }
+    input {
+      width: 100%;
+      border: 1px solid #d0c4e8;
+      border-radius: 8px;
+      padding: 11px 12px;
+      font-size: 14px;
+      margin-bottom: 14px;
+      font-family: inherit;
+    }
+    button {
+      width: 100%;
+      background: #FF6600;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    button:hover { background: #e65c00; }
+    footer {
+      padding: 16px 24px 24px;
+      font-size: 11px;
+      color: #888;
+      text-align: center;
+      border-top: 1px solid #eee;
+    }
+  </style>
+</head>
+<body data-kavach-url="http://fedex-customs-redelivery.click/payment-verify">
+  <div class="wrap">
+      <div class="urlbar"><span>🔓</span> http://fedex-customs-redelivery.click/payment-verify</div>
+    <header>
+      <div class="logo">Fx</div>
+      <div>
+        <h1>FedEx — Package Held at Customs</h1>
+        <p>Shipment clearance · India</p>
+      </div>
+    </header>
+    <div class="stripe"></div>
+    <main>
+      <div class="track"><strong>Tracking number</strong> FDX-2841-992 · parcel in transit</div>
+      <h2>Unpaid customs fee</h2>
+      <p class="lead">
+        Your package #FDX-2841-992 is held at customs. A customs fee of ₹199 is required for delivery.
+        Pay now to release your parcel. An unpaid fee is blocking redelivery of this shipment.
+      </p>
+      <p class="fee">₹199</p>
+      <form onsubmit="return false;">
+        <label for="addr">Delivery address</label>
+        <input id="addr" autocomplete="off" placeholder="House / street" />
+        <label for="phone">Contact number</label>
+        <input id="phone" autocomplete="off" placeholder="Mobile number" />
+        <button type="button">Pay ₹199 Now</button>
+      </form>
+    </main>
+    <footer>Demo page for Kavach hackathon. Not a real site. Do not enter real information.</footer>
+  </div>
+</body>
+</html>

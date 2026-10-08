@@ -1,0 +1,182 @@
+#kavach-overlay.kavach-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 18, 25, 0.72);
+  backdrop-filter: blur(6px);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  animation: kavach-fade-in 0.22s ease-out;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+@keyframes kavach-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+#kavach-overlay .kavach-card {
+  width: min(440px, 100%);
+  background: #fff;
+  border-radius: 16px;
+  padding: 28px 28px 22px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.28);
+  border-top: 4px solid #f59e0b;
+  color: #111827;
+  animation: kavach-card-in 0.28s ease-out;
+}
+
+#kavach-overlay.kavach-dangerous .kavach-card {
+  border-top-color: #dc2626;
+}
+
+@keyframes kavach-card-in {
+  from { transform: translateY(10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+#kavach-overlay .kavach-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 auto 16px;
+  background: #fef3c7;
+  color: #b45309;
+}
+
+#kavach-overlay.kavach-dangerous .kavach-icon {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+#kavach-overlay h1 {
+  margin: 0 0 8px;
+  font-size: 22px;
+  line-height: 1.25;
+  font-weight: 700;
+  text-align: center;
+  color: #111827;
+}
+
+#kavach-overlay .kavach-sub {
+  margin: 0 0 16px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+#kavach-overlay .kavach-cat {
+  display: inline-block;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+  background: #f3f4f6;
+  color: #1f2937;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: 999px;
+  margin-bottom: 16px;
+}
+
+#kavach-overlay .kavach-reasons {
+  list-style: none;
+  margin: 0 0 20px;
+  padding: 0;
+}
+
+#kavach-overlay .kavach-reasons li {
+  position: relative;
+  padding: 8px 0 8px 22px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #374151;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+#kavach-overlay .kavach-reasons li:last-child {
+  border-bottom: none;
+}
+
+#kavach-overlay .kavach-reasons li::before {
+  content: "→";
+  position: absolute;
+  left: 0;
+  color: #9ca3af;
+  font-size: 13px;
+}
+
+#kavach-overlay .kavach-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#kavach-overlay .kavach-btn {
+  appearance: none;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+#kavach-overlay .kavach-btn-primary {
+  background: #111827;
+  color: #fff;
+}
+
+#kavach-overlay .kavach-btn-primary:hover {
+  background: #030712;
+}
+
+#kavach-overlay .kavach-btn-secondary {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+#kavach-overlay .kavach-btn-secondary:hover {
+  background: #d1d5db;
+}
+
+#kavach-overlay .kavach-foot {
+  margin: 16px 0 0;
+  text-align: center;
+  font-size: 11px;
+  color: #9ca3af;
+  line-height: 1.4;
+}
+
+#kavach-overlay .kavach-warning-box {
+  background: #fff3cd;
+  border-left: 4px solid #f57c00;
+  border-radius: 6px;
+  padding: 12px 14px;
+  margin: 14px 0 18px;
+}
+
+#kavach-overlay .kavach-warning-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #e65100;
+  margin-bottom: 4px;
+}
+
+#kavach-overlay .kavach-warning-items {
+  font-size: 13.5px;
+  color: #333;
+  font-weight: 600;
+}

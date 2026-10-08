@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Congratulations! You've Won!</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #1e1033;
+      font-family: "Segoe UI", Georgia, serif;
+      color: #2a1a3a;
+    }
+    .urlbar {
+      background: #3b2a55;
+      color: #e9d5ff;
+      font-size: 12px;
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: ui-monospace, Consolas, monospace;
+    }
+    .wrap { max-width: 640px; margin: 0 auto; min-height: 100vh; background: #fff; }
+    header {
+      background: linear-gradient(135deg, #6b21a8 0%, #b8860b 55%, #f5d76e 100%);
+      color: #fff;
+      padding: 28px 24px 32px;
+      text-align: center;
+    }
+    .logo {
+      width: 56px; height: 56px;
+      margin: 0 auto 12px;
+      background: #fff;
+      color: #6b21a8;
+      font-weight: 800;
+      font-size: 26px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    }
+    header h1 { margin: 0; font-size: 28px; font-weight: 800; text-shadow: 0 2px 8px rgba(0,0,0,0.25); }
+    header p { margin: 8px 0 0; font-size: 15px; opacity: 0.95; }
+    main { padding: 28px 24px; }
+    .prize {
+      text-align: center;
+      font-size: 36px;
+      font-weight: 800;
+      color: #b8860b;
+      margin: 0 0 16px;
+    }
+    .lead { font-size: 15px; line-height: 1.6; margin: 0 0 22px; text-align: center; }
+    label { display: block; font-size: 13px; font-weight: 600; margin: 0 0 6px; }
+    input {
+      width: 100%;
+      border: 1px solid #e9d5ff;
+      border-radius: 8px;
+      padding: 11px 12px;
+      font-size: 14px;
+      margin-bottom: 14px;
+      font-family: "Segoe UI", sans-serif;
+    }
+    button {
+      width: 100%;
+      background: linear-gradient(90deg, #6b21a8, #b8860b);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 15px;
+      font-size: 17px;
+      font-weight: 800;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    button:hover { filter: brightness(1.08); }
+    .fine { text-align: center; font-size: 12px; color: #7c3aed; margin-top: 12px; }
+    footer {
+      padding: 16px 24px 24px;
+      font-size: 11px;
+      color: #888;
+      text-align: center;
+      border-top: 1px solid #f3e8ff;
+    }
+  </style>
+</head>
+<body data-kavach-url="http://lucky-draw-winner.xyz/claim">
+  <div class="wrap">
+    <div class="urlbar"><span>🔓</span> http://lucky-draw-winner.xyz/claim</div>
+    <header>
+      <div class="logo">W</div>
+      <h1>Congratulations! You've Won!</h1>
+      <p>Diwali Lucky Draw · Official prize desk</p>
+    </header>
+    <main>
+      <p class="prize">₹50,000</p>
+      <p class="lead">
+        Congratulations you won — you are the lucky winner of our Diwali Lucky Draw.
+        Claim your prize now. This lottery cashback is a limited time offer.
+        Click to claim before the offer expires today.
+      </p>
+      <form onsubmit="return false;">
+        <label for="name">Full name</label>
+        <input id="name" autocomplete="off" placeholder="Name as on ID" />
+        <label for="mobile">Mobile number</label>
+        <input id="mobile" autocomplete="off" placeholder="10-digit mobile" />
+        <button type="button">Claim Your Prize</button>
+      </form>
+      <p class="fine">Last chance to claim your prize · act now</p>
+    </main>
+    <footer>Demo page for Kavach hackathon. Not a real site. Do not enter real information.</footer>
+  </div>
+</body>
+</html>

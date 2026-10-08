@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kavach — APK Manifest Analysis</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      background: rgba(15, 18, 25, 0.92);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 24px;
+    }
+    .drop {
+      width: min(440px, 100%);
+      border: 2px dashed #64748b;
+      border-radius: 16px;
+      padding: 28px 20px;
+      text-align: center;
+      color: #e2e8f0;
+      background: rgba(255, 255, 255, 0.04);
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .drop.over {
+      border-color: #f87171;
+      background: rgba(248, 113, 113, 0.12);
+    }
+    .drop h2 {
+      margin: 0 0 6px;
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .drop p {
+      margin: 0;
+      font-size: 13px;
+      color: #94a3b8;
+    }
+    .drop .status {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #cbd5e1;
+    }
+    .drop .status.err { color: #fca5a5; }
+    .sample {
+      appearance: none;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      background: #e5e7eb;
+      color: #111827;
+    }
+    .sample:hover { background: #d1d5db; }
+    .kavach-card {
+      width: min(440px, 100%);
+      background: #fff;
+      border-radius: 16px;
+      padding: 28px 28px 22px;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.28);
+      border-top: 4px solid #f59e0b;
+      color: #111827;
+      animation: kavach-card-in 0.28s ease-out;
+      display: none;
+    }
+    .kavach-card.show { display: block; }
+    .kavach-card.dangerous { border-top-color: #dc2626; }
+    .kavach-card.suspicious { border-top-color: #f59e0b; }
+    .kavach-card.safe { border-top-color: #16a34a; }
+    @keyframes kavach-card-in {
+      from { transform: translateY(10px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .kavach-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: 700;
+      margin: 0 auto 16px;
+      background: #fef3c7;
+      color: #b45309;
+    }
+    .kavach-card.dangerous .kavach-icon { background: #fee2e2; color: #b91c1c; }
+    .kavach-card.suspicious .kavach-icon { background: #fef3c7; color: #b45309; }
+    .kavach-card.safe .kavach-icon { background: #dcfce7; color: #15803d; }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 22px;
+      line-height: 1.25;
+      font-weight: 700;
+      text-align: center;
+    }
+    .kavach-sub {
+      margin: 0 0 16px;
+      text-align: center;
+      color: #6b7280;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+    .kavach-score {
+      margin: 0 0 16px;
+      text-align: center;
+      color: #6b7280;
+      font-size: 14px;
+    }
+    .kavach-cat {
+      display: none;
+      text-align: center;
+      background: #f3f4f6;
+      color: #1f2937;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 8px 12px;
+      border-radius: 999px;
+      margin-bottom: 16px;
+    }
+    .kavach-cat.show { display: block; }
+    .host {
+      display: none;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 11px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 8px 10px;
+      word-break: break-all;
+      color: #334155;
+      margin-bottom: 14px;
+    }
+    .host.show { display: block; }
+    .kavach-reasons {
+      list-style: none;
+      margin: 0 0 8px;
+      padding: 0;
+    }
+    .kavach-reasons li {
+      position: relative;
+      padding: 8px 0 8px 22px;
+      font-size: 13px;
+      line-height: 1.45;
+      color: #374151;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .kavach-reasons li:last-child { border-bottom: none; }
+    .kavach-reasons li::before {
+      content: "→";
+      position: absolute;
+      left: 0;
+      color: #9ca3af;
+      font-size: 13px;
+    }
+    .kavach-foot, .info {
+      margin: 16px 0 0;
+      text-align: center;
+      font-size: 11px;
+      color: #9ca3af;
+      line-height: 1.4;
+    }
+    .info { margin: 4px 0 0; max-width: 440px; color: #94a3b8; }
+    input[type="file"] { display: none; }
+  </style>
+</head>
+<body>
+  <div class="drop" id="drop" tabindex="0">
+    <h2>Drop an .apk here</h2>
+    <p>or click to browse</p>
+    <p class="status" id="status"></p>
+  </div>
+  <input id="file" type="file" accept=".apk,application/vnd.android.package-archive" />
+  <button type="button" class="sample" id="sample">Try sample APK</button>
+
+  <div id="card" class="kavach-card">
+    <div class="kavach-icon" id="icon">⚠</div>
+    <h1>Kavach — APK Manifest Analysis</h1>
+    <p class="kavach-sub">Same detection engine. Different data source.</p>
+    <p class="kavach-score" id="score"></p>
+    <div class="kavach-cat" id="cat"></div>
+    <div class="host" id="host"></div>
+    <ul class="kavach-reasons" id="reasons"></ul>
+    <p class="kavach-foot">All analysis runs on your device. No data was sent anywhere.</p>
+  </div>
+  <p class="info">Nothing leaves your device. The APK is parsed entirely in your browser.</p>
+
+  <script src="./lib/jszip.min.js"></script>
+  <script>
+    const SUSPICIOUS_PERMISSIONS = {
+      READ_SMS: { weight: 20, detail: "Reads incoming SMS, enables OTP interception" },
+      RECEIVE_SMS: { weight: 20, detail: "Intercepts incoming SMS in real time" },
+      SEND_SMS: { weight: 18, detail: "Can send SMS, used for premium-rate fraud" },
+      READ_CONTACTS: { weight: 12, detail: "Reads the contact list" },
+      RECORD_AUDIO: { weight: 18, detail: "Can record audio in the background" },
+      ACCESS_FINE_LOCATION: { weight: 10, detail: "Tracks precise location" },
+      ACCESS_BACKGROUND_LOCATION: { weight: 15, detail: "Tracks location even when closed" },
+      READ_CALL_LOG: { weight: 15, detail: "Reads call history" },
+      SYSTEM_ALERT_WINDOW: { weight: 22, detail: "Draws overlays over other apps, common in banking trojans" },
+      REQUEST_INSTALL_PACKAGES: { weight: 25, detail: "Can install other apps, used by dropper malware" },
+      BIND_ACCESSIBILITY_SERVICE: { weight: 30, detail: "Accessibility access, full screen reading and tapping" },
+      CAMERA: { weight: 8, detail: "Camera access" },
+      READ_EXTERNAL_STORAGE: { weight: 8, detail: "Reads files on external storage" },
+      WRITE_EXTERNAL_STORAGE: { weight: 8, detail: "Writes files on external storage" }
+    };
+    const EXPECTED_PERMISSIONS = {
+      flashlight: ["CAMERA"],
+      calculator: [],
+      notes: [],
+      weather: ["ACCESS_FINE_LOCATION"],
+      camera: ["CAMERA", "WRITE_EXTERNAL_STORAGE"],
+      banking: ["INTERNET", "CAMERA", "ACCESS_FINE_LOCATION"],
+      social: ["INTERNET", "CAMERA", "READ_CONTACTS"],
+      unknown: []
+    };
+    const CATEGORY_LABELS = {
+      flashlight: "Flashlight", calculator: "Calculator", notes: "Notes",
+      weather: "Weather", camera: "Camera", banking: "Banking",
+      social: "Social", unknown: "Unknown"
+    };
+    const CATEGORY_HINTS = [
+      { key: "flashlight", re: /flash\s*light|torch/i },
+      { key: "calculator", re: /calc(ulator)?/i },
+      { key: "notes", re: /\bnotes?\b|notepad|memo/i },
+      { key: "weather", re: /weather|forecast/i },
+      { key: "camera", re: /camera|selfie|photo/i },
+      { key: "banking", re: /bank|upi|wallet|finance|payment/i },
+      { key: "social", re: /social|chat|messenger|whatsapp|instagram|facebook/i }
+    ];
+    const SUSPICIOUS_TOKEN_RE = /(fake|mod|crack|hack|free|pro|premium|unlock)/i;
+    const DEMO_XML = `<?xml version="1.0" encoding="utf-8"?>
+<manifest package="com.fake.flashlight.pro">
+  <application android:label="Super Flashlight Pro">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_SMS" />
+    <uses-permission android:name="android.permission.RECEIVE_SMS" />
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+  </application>
+</manifest>`;
+
+    function levelFromScore(score) {
+      if (score > 0.6) return "dangerous";
+      if (score >= 0.3) return "suspicious";
+      return "safe";
+    }
+    function normalizePerm(name) {
+      if (!name || typeof name !== "string") return "";
+      const trimmed = name.trim();
+      const m = trimmed.match(/^(?:android\.permission\.)?([A-Z_]+)$/i);
+      return m ? m[1].toUpperCase() : trimmed.replace(/^android\.permission\./i, "").toUpperCase();
+    }
+    function inferCategory(packageName, label) {
+      const blob = `${packageName || ""} ${label || ""}`;
+      for (let i = 0; i < CATEGORY_HINTS.length; i++) {
+        if (CATEGORY_HINTS[i].re.test(blob)) return CATEGORY_HINTS[i].key;
+      }
+      return "unknown";
+    }
+    function parseManifestXml(xml) {
+      const permissions = [];
+      const permRe = /android:name\s*=\s*"android\.permission\.([A-Z_]+)"/g;
+      let m;
+      while ((m = permRe.exec(xml)) !== null) permissions.push(m[1]);
+      const pkgMatch = xml.match(/package\s*=\s*"([^"]+)"/);
+      const packageName = pkgMatch ? pkgMatch[1] : "";
+      const labelRe = /android:label\s*=\s*"([^"]+)"/g;
+      let label = "";
+      let lm;
+      while ((lm = labelRe.exec(xml)) !== null) label = lm[1];
+      return { packageName, permissions, label };
+    }
+    function isObfuscatedPackage(packageName) {
+      if (!packageName) return false;
+      return packageName.split(".").filter(Boolean).some(function (p) { return p.length === 1; });
+    }
+    function uniquePerms(list) {
+      const seen = {};
+      const out = [];
+      (list || []).forEach(function (raw) {
+        const p = normalizePerm(raw);
+        if (!p || seen[p]) return;
+        seen[p] = true;
+        out.push(p);
+      });
+      return out;
+    }
+    function emptyResult() {
+      return {
+        score: 0, level: "safe", host: "", category: "unknown",
+        categoryLabel: CATEGORY_LABELS.unknown, features: [], explanation: []
+      };
+    }
+    function analyzeAPK(input) {
+      if (input == null || input === "") return emptyResult();
+      let packageName = "";
+      let permissions = [];
+      let category = "";
+      let label = "";
+      let obfuscated = null;
+      if (typeof input === "string") {
+        const parsed = parseManifestXml(input);
+        packageName = parsed.packageName;
+        permissions = parsed.permissions;
+        label = parsed.label;
+      } else if (typeof input === "object") {
+        packageName = typeof input.packageName === "string" ? input.packageName : "";
+        permissions = Array.isArray(input.permissions) ? input.permissions : [];
+        category = typeof input.category === "string" ? input.category : "";
+        label = typeof input.label === "string" ? input.label : "";
+        if (typeof input.obfuscated === "boolean") obfuscated = input.obfuscated;
+      } else {
+        return emptyResult();
+      }
+      permissions = uniquePerms(permissions);
+      const inferred = inferCategory(packageName, label);
+      const catKey = EXPECTED_PERMISSIONS[category] ? category : inferred;
+      const categoryLabel = CATEGORY_LABELS[catKey] || CATEGORY_LABELS.unknown;
+      const expected = {};
+      (EXPECTED_PERMISSIONS[catKey] || []).forEach(function (p) { expected[p] = true; });
+      const features = [];
+      permissions.forEach(function (perm) {
+        const meta = SUSPICIOUS_PERMISSIONS[perm];
+        if (!meta || expected[perm]) return;
+        const prefix = catKey === "unknown" ? "App" : categoryLabel + " app";
+        features.push({
+          name: "permission-" + perm,
+          weight: meta.weight,
+          detail: prefix + " requests " + perm + " — " + meta.detail
+        });
+      });
+      if (packageName && SUSPICIOUS_TOKEN_RE.test(packageName)) {
+        features.push({
+          name: "suspicious-package-token",
+          weight: 12,
+          detail: "Package name contains suspicious token"
+        });
+      }
+      if (obfuscated === true || isObfuscatedPackage(packageName)) {
+        features.push({
+          name: "obfuscated-package",
+          weight: 10,
+          detail: "Package name looks obfuscated (single-character segments)"
+        });
+      }
+      const raw = features.reduce(function (sum, f) { return sum + f.weight; }, 0);
+      const score = Math.min(1, raw / 100);
+      const ranked = features.slice().sort(function (a, b) { return b.weight - a.weight; });
+      return {
+        score: score,
+        level: levelFromScore(score),
+        host: packageName,
+        category: catKey,
+        categoryLabel: categoryLabel,
+        features: features,
+        explanation: ranked.slice(0, 6).map(function (f) { return f.detail; })
+      };
+    }
+
+    function extractFromAxml(bytes) {
+      const utf8 = new TextDecoder("utf-8").decode(bytes);
+      const text = utf8.replace(/\0/g, "");
+      const seen = {};
+      const permissions = [];
+      const permRe = /android\.permission\.[A-Z_]+/g;
+      let m;
+      while ((m = permRe.exec(text)) !== null) {
+        const p = m[0].replace(/^android\.permission\./, "");
+        if (seen[p]) continue;
+        seen[p] = true;
+        permissions.push(p);
+      }
+      let packageName = "";
+      const quoted = text.match(/package="([^"]+)"/);
+      if (quoted) packageName = quoted[1];
+      if (!packageName) {
+        const pkgRe = /[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*){1,}/g;
+        let pm;
+        while ((pm = pkgRe.exec(text)) !== null) {
+          const s = pm[0];
+          if (s.indexOf("permission") !== -1) continue;
+          if (/^(android|androidx|java|javax|kotlin|dalvik|com\.android)/.test(s)) continue;
+          packageName = s;
+          break;
+        }
+      }
+      return { packageName: packageName, permissions: permissions };
+    }
+
+    function render(result) {
+      const card = document.getElementById("card");
+      card.className = "kavach-card show " + (result.level || "safe");
+      const icons = { dangerous: "⚠", suspicious: "!", safe: "✓" };
+      document.getElementById("icon").textContent = icons[result.level] || "⚠";
+      const score100 = Math.round((result.score || 0) * 100);
+      const levelWord = result.level === "dangerous" ? "DANGEROUS"
+        : result.level === "suspicious" ? "SUSPICIOUS" : "SAFE";
+      document.getElementById("score").textContent =
+        levelWord + " — Kavach flagged this package (score " + score100 + "/100)";
+      const cat = document.getElementById("cat");
+      if (result.categoryLabel) {
+        cat.textContent = "Detected: " + result.categoryLabel;
+        cat.classList.add("show");
+      } else {
+        cat.textContent = "";
+        cat.classList.remove("show");
+      }
+      const host = document.getElementById("host");
+      if (result.host) {
+        host.textContent = result.host;
+        host.classList.add("show");
+      } else {
+        host.textContent = "";
+        host.classList.remove("show");
+      }
+      const reasons = document.getElementById("reasons");
+      reasons.innerHTML = "";
+      (result.explanation || []).slice(0, 6).forEach(function (line) {
+        const li = document.createElement("li");
+        li.textContent = line;
+        reasons.appendChild(li);
+      });
+      if (!reasons.childNodes.length) {
+        const li = document.createElement("li");
+        li.textContent = "No suspicious permission signals";
+        reasons.appendChild(li);
+      }
+    }
+
+    function setStatus(msg, isErr) {
+      const el = document.getElementById("status");
+      el.textContent = msg || "";
+      el.className = "status" + (isErr ? " err" : "");
+    }
+
+    function findManifest(zip) {
+      var file = zip.file("AndroidManifest.xml");
+      if (file) return file;
+      var names = Object.keys(zip.files);
+      for (var i = 0; i < names.length; i++) {
+        var n = names[i].replace(/\\/g, "/");
+        if (zip.files[names[i]].dir) continue;
+        if (n.toLowerCase() === "androidmanifest.xml" || n.toLowerCase().endsWith("/androidmanifest.xml")) {
+          return zip.file(names[i]);
+        }
+      }
+      return null;
+    }
+
+    async function handleApk(file) {
+      if (!file) return;
+      const name = (file.name || "").toLowerCase();
+      if (name && !name.endsWith(".apk") && file.type !== "application/vnd.android.package-archive") {
+        setStatus("Please drop a .apk file.", true);
+        return;
+      }
+      if (typeof JSZip === "undefined") {
+        setStatus("JSZip failed to load. Check your network connection.", true);
+        return;
+      }
+      setStatus("Reading " + (file.name || "APK") + "…");
+      try {
+        const zip = await JSZip.loadAsync(file);
+        const manifest = findManifest(zip);
+        if (!manifest) {
+          setStatus("No AndroidManifest.xml found in this file.", true);
+          return;
+        }
+        const bytes = await manifest.async("uint8array");
+        const extracted = extractFromAxml(bytes);
+        const result = analyzeAPK({
+          packageName: extracted.packageName,
+          permissions: extracted.permissions
+        });
+        setStatus("Parsed " + (file.name || "APK") + " · " + extracted.permissions.length + " permission(s)");
+        render(result);
+      } catch (err) {
+        setStatus("Could not parse this APK.", true);
+      }
+    }
+
+    const drop = document.getElementById("drop");
+    const input = document.getElementById("file");
+
+    drop.addEventListener("click", function () { input.click(); });
+    drop.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        input.click();
+      }
+    });
+    input.addEventListener("change", function () {
+      const f = input.files && input.files[0];
+      if (f) handleApk(f);
+      input.value = "";
+    });
+    ["dragenter", "dragover"].forEach(function (ev) {
+      drop.addEventListener(ev, function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        drop.classList.add("over");
+      });
+    });
+    ["dragleave", "drop"].forEach(function (ev) {
+      drop.addEventListener(ev, function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        drop.classList.remove("over");
+      });
+    });
+    drop.addEventListener("drop", function (e) {
+      const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+      if (f) handleApk(f);
+    });
+    document.getElementById("sample").addEventListener("click", function () {
+      setStatus("Loaded sample flashlight Trojan manifest");
+      render(analyzeAPK(DEMO_XML));
+    });
+  </script>
+</body>
+</html>

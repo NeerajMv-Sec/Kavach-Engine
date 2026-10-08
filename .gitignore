@@ -1,0 +1,26 @@
+```gitignore
+# OS files
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Node
+node_modules/
+
+# Logs
+*.log
+
+# Test samples — do not ship
+kavach-test/
+*.apk
+!icons/*.apk
+
+# Build artifacts
+dist/
+build/
+```
