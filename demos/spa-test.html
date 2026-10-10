@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head><title>SPA Test</title></head>
+<body style="font-family: sans-serif; padding: 40px; max-width: 640px;"
+      data-kavach-url="https://example.com/">
+  <h1>SPA Simulation</h1>
+  <p id="content">This is a safe initial page.</p>
+  <button onclick="navigate()">Simulate SPA navigation to scam page</button>
+
+  <script>
+    function navigate() {
+      // Hash navigation works on file:// URLs.
+      // This fires the "hashchange" event, which our extension listens for.
+      window.location.hash = "fake-path";
+
+      // Change the visible content to look like a scam
+      document.getElementById("content").innerHTML =
+        "Dear customer, your HDFC account will be suspended. Update KYC at http://hdfc-verify.tk/kyc immediately. Share your OTP with customer care.";
+
+      // Swap the analyzed URL so the detector sees the scam URL
+      document.body.dataset.kavachUrl = "http://hdfc-verify.tk/kyc";
+    }
+  </script>
+</body>
+</html>

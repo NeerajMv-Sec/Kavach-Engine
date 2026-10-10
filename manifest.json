@@ -3,7 +3,7 @@
   "name": "Kavach",
   "version": "1.0.0",
   "description": "On-device scam and phishing detection",
-  "permissions": ["activeTab", "storage", "scripting", "tabs"],
+  "permissions": ["activeTab", "storage", "scripting"],
   "host_permissions": ["<all_urls>"],
   "action": {
     "default_popup": "popup.html",

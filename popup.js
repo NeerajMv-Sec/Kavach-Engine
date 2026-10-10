@@ -1,3 +1,8 @@
+import { getLang, setLang, t, nextLang, langLabel } from "./lib/i18n.js";
+
+let currentLang = "en";
+let lastState = null; // { verdict, pageUrl, currentHost, isTrusted }
+
 function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, (ch) => {
     switch (ch) {
@@ -10,9 +15,9 @@ function escapeHtml(value) {
   });
 }
 
-function featureList(features) {
+function featureList(features, lang) {
   if (!features || !features.length) {
-    return `<p class="none">No signals</p>`;
+    return `<p class="none">${escapeHtml(t(lang, "noSignals"))}</p>`;
   }
   return features.map((f) => `
     <div class="feat">
@@ -33,19 +38,35 @@ function hostFromUrl(url, fallbackHost) {
   return (fallbackHost || "").toLowerCase();
 }
 
-function render(verdict, pageUrl, currentHost, isTrusted) {
+function renderHeader(lang) {
+  document.getElementById("hdr-title").textContent = t(lang, "appName");
+  document.getElementById("hdr-sub").textContent = t(lang, "tagline");
+  document.getElementById("ftr-text").textContent = t(lang, "footerText");
+  document.getElementById("lang-toggle").textContent = langLabel(lang);
+}
+
+function render(lang) {
+  const state = lastState;
   const app = document.getElementById("app");
+
+  if (!state) {
+    app.innerHTML = `<p class="empty">${escapeHtml(t(lang, "loading"))}</p>`;
+    return;
+  }
+
+  const { verdict, pageUrl, currentHost, isTrusted } = state;
+
   if (!verdict) {
-    app.innerHTML = `<p class="empty">No verdict yet.</p>`;
+    app.innerHTML = `<p class="empty">${escapeHtml(t(lang, "noVerdict"))}</p>`;
     return;
   }
 
   const level = verdict.level || "safe";
   const score100 = Math.round((verdict.score || 0) * 100);
   const labels = {
-    safe: { title: "Looks Safe", icon: "✓" },
-    suspicious: { title: "Suspicious", icon: "!" },
-    dangerous: { title: "Dangerous", icon: "⚠" }
+    safe: { title: t(lang, "verdictSafe"), icon: "✓" },
+    suspicious: { title: t(lang, "verdictSuspicious"), icon: "!" },
+    dangerous: { title: t(lang, "verdictDangerous"), icon: "⚠" }
   };
   const meta = labels[level] || labels.safe;
 
@@ -61,8 +82,8 @@ function render(verdict, pageUrl, currentHost, isTrusted) {
   const showButtons = level !== "safe" && currentHost && !isTrusted;
   const actionsHtml = showButtons ? `
     <div class="actions">
-      <button type="button" class="btn btn-primary" id="trust-btn">Trust this site</button>
-      <button type="button" class="btn btn-secondary" id="report-btn">Report false positive</button>
+      <button type="button" class="btn btn-primary" id="trust-btn">${escapeHtml(t(lang, "trustButton"))}</button>
+      <button type="button" class="btn btn-secondary" id="report-btn">${escapeHtml(t(lang, "reportButton"))}</button>
     </div>
     <div class="status" id="status"></div>
   ` : "";
@@ -71,19 +92,19 @@ function render(verdict, pageUrl, currentHost, isTrusted) {
     <div class="badge ${escapeHtml(level)}">
       <div class="badge-icon">${meta.icon}</div>
       <div>
-        <h2>${meta.title}</h2>
-        <p>Risk score ${score100}/100</p>
+        <h2>${escapeHtml(meta.title)}</h2>
+        <p>${escapeHtml(t(lang, "riskScore", { score: score100 }))}</p>
       </div>
     </div>
     ${cat}
     <div class="urlbox">${escapeHtml(displayUrl)}</div>
     <section class="section">
-      <h3>Link Analysis</h3>
-      ${featureList(verdict.url && verdict.url.features)}
+      <h3>${escapeHtml(t(lang, "linkAnalysis"))}</h3>
+      ${featureList(verdict.url && verdict.url.features, lang)}
     </section>
     <section class="section">
-      <h3>Content Analysis</h3>
-      ${featureList(verdict.text && verdict.text.features)}
+      <h3>${escapeHtml(t(lang, "contentAnalysis"))}</h3>
+      ${featureList(verdict.text && verdict.text.features, lang)}
     </section>
     ${actionsHtml}
   `;
@@ -100,7 +121,7 @@ function render(verdict, pageUrl, currentHost, isTrusted) {
       if (!list.includes(currentHost)) list.push(currentHost);
       chrome.storage.local.set({ trustedDomains: list }, () => {
         chrome.runtime.sendMessage({ type: "clear-verdict", tabId: null });
-        statusEl.textContent = "✓ This site will be skipped in future checks";
+        statusEl.textContent = t(lang, "trustConfirmed");
         statusEl.classList.add("show");
         setTimeout(() => chrome.tabs.reload(), 800);
       });
@@ -116,50 +137,71 @@ function render(verdict, pageUrl, currentHost, isTrusted) {
         timestamp: Date.now()
       });
       chrome.storage.local.set({ reportedFalsePositives: list }, () => {
-        statusEl.textContent = "✓ Reported. Thank you.";
+        statusEl.textContent = t(lang, "reportConfirmed");
         statusEl.classList.add("show");
       });
     });
   });
 }
 
-function analyzeTab(tab) {
+function analyzeTab(tab, lang) {
   chrome.runtime.sendMessage(
     { type: "analyze", tabId: tab.id, url: tab.url || "" },
     (result) => {
       if (chrome.runtime.lastError) {
-        document.getElementById("app").innerHTML = `<p class="empty">Could not analyze this tab.</p>`;
+        document.getElementById("app").innerHTML =
+          `<p class="empty">${escapeHtml(t(lang, "couldNotAnalyze"))}</p>`;
         return;
       }
       const host = hostFromUrl(tab.url || "", result && result.host);
-chrome.storage.local.get(["trustedDomains"], (res) => {
-  const list = Array.isArray(res.trustedDomains) ? res.trustedDomains : [];
-  render(result, tab.url, host, list.includes(host));
-});
+      chrome.storage.local.get(["trustedDomains"], (res) => {
+        const list = Array.isArray(res.trustedDomains) ? res.trustedDomains : [];
+        lastState = { verdict: result, pageUrl: tab.url, currentHost: host, isTrusted: list.includes(host) };
+        render(lang);
+      });
     }
   );
 }
 
-chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-  const tab = tabs[0];
-  if (!tab) {
-    document.getElementById("app").innerHTML = `<p class="empty">No active tab.</p>`;
-    return;
-  }
+function init(lang) {
+  currentLang = lang;
+  renderHeader(lang);
 
-  chrome.runtime.sendMessage({ type: "get-verdict", tabId: tab.id }, (cached) => {
-    if (chrome.runtime.lastError) {
-      analyzeTab(tab);
+  document.getElementById("lang-toggle").addEventListener("click", async () => {
+    const next = nextLang(currentLang);
+    await setLang(next);
+    currentLang = next;
+    renderHeader(next);
+    render(next);
+  });
+
+  document.getElementById("loading").textContent = t(lang, "loading");
+
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    const tab = tabs[0];
+    if (!tab) {
+      document.getElementById("app").innerHTML =
+        `<p class="empty">${escapeHtml(t(lang, "noActiveTab"))}</p>`;
       return;
     }
-    if (cached) {
-  const host = hostFromUrl(tab.url || "", cached.host);
-  chrome.storage.local.get(["trustedDomains"], (res) => {
-    const list = Array.isArray(res.trustedDomains) ? res.trustedDomains : [];
-    render(cached, tab.url, host, list.includes(host));
+
+    chrome.runtime.sendMessage({ type: "get-verdict", tabId: tab.id }, (cached) => {
+      if (chrome.runtime.lastError) {
+        analyzeTab(tab, lang);
+        return;
+      }
+      if (cached) {
+        const host = hostFromUrl(tab.url || "", cached.host);
+        chrome.storage.local.get(["trustedDomains"], (res) => {
+          const list = Array.isArray(res.trustedDomains) ? res.trustedDomains : [];
+          lastState = { verdict: cached, pageUrl: tab.url, currentHost: host, isTrusted: list.includes(host) };
+          render(lang);
+        });
+      } else {
+        analyzeTab(tab, lang);
+      }
+    });
   });
-} else {
-      analyzeTab(tab);
-    }
-  });
-});
+}
+
+getLang().then(init);

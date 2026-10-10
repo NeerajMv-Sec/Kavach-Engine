@@ -1,5 +1,7 @@
 (() => {
   let overlayShown = false;
+  let lastUrl = window.location.href;
+  let rescanTimer = null;
 
   function escapeHtml(value) {
     return String(value).replace(/[&<>"']/g, (ch) => {
@@ -70,6 +72,11 @@
     }
   }
 
+  function removeOverlay() {
+    const el = document.getElementById("kavach-overlay");
+    if (el) el.remove();
+  }
+
   function showOverlay(verdict) {
     if (overlayShown) return;
     if (!verdict || (verdict.level !== "suspicious" && verdict.level !== "dangerous")) return;
@@ -130,12 +137,51 @@
     });
   }
 
-  ensureBody(() => {
+  function runScan() {
     isTrusted((trusted) => {
       if (trusted) return;
       const url = getAnalyzeUrl();
-      const text = (document.body.innerText || "").slice(0, 3000);
+      const text = (document.body?.innerText || "").slice(0, 3000);
       sendAnalyze({ url, text }, showOverlay);
     });
-  });
+  }
+
+  function handleNavigation() {
+    const currentUrl = window.location.href;
+    if (currentUrl === lastUrl) return;
+    lastUrl = currentUrl;
+
+    // Clear any existing overlay so a new one can fire
+    removeOverlay();
+    overlayShown = false;
+
+    // Debounce — wait for the SPA to render its content before rescanning
+    if (rescanTimer) clearTimeout(rescanTimer);
+    rescanTimer = setTimeout(runScan, 400);
+  }
+
+  function installNavigationHooks() {
+    // Native events — browser back/forward and hash changes
+    window.addEventListener("popstate", handleNavigation);
+    window.addEventListener("hashchange", handleNavigation);
+
+    // Patch pushState and replaceState — used by React Router, Vue Router, etc.
+    const wrap = (method) => {
+      const original = history[method];
+      if (typeof original !== "function") return;
+      history[method] = function () {
+        const ret = original.apply(this, arguments);
+        // Fire after the state change is applied
+        setTimeout(handleNavigation, 0);
+        return ret;
+      };
+    };
+    wrap("pushState");
+    wrap("replaceState");
+  }
+
+  // --- Initial run ---
+  lastUrl = window.location.href;
+  installNavigationHooks();
+  ensureBody(runScan);
 })();

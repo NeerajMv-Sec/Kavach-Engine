@@ -8,16 +8,19 @@
 </head>
 <body>
   <header class="hdr">
-    <h1>Kavach</h1>
-    <p>On-device scam and phishing detection</p>
+    <div class="hdr-left">
+      <h1 id="hdr-title">Kavach</h1>
+      <p id="hdr-sub">On-device scam and phishing detection</p>
+    </div>
+    <button type="button" class="lang-toggle" id="lang-toggle">EN</button>
   </header>
   <main id="app">
-    <p class="loading">Analyzing this page…</p>
+    <p class="loading" id="loading">Analyzing this page…</p>
   </main>
   <footer class="ftr">
     <span class="dot"></span>
-    All analysis runs locally · no cloud
+    <span id="ftr-text">All analysis runs locally · no cloud</span>
   </footer>
-  <script src="popup.js"></script>
+  <script type="module" src="popup.js"></script>
 </body>
 </html>
