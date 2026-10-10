@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Kavach — Evaluation</title>
+  <style>
+    body { font-family: ui-monospace, Consolas, monospace; padding: 24px;
+           max-width: 900px; margin: 0 auto; background: #f8fafc; color: #111827; }
+    h1 { font-family: -apple-system, sans-serif; font-size: 20px; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 24px; font-size: 13px; }
+    th, td { padding: 6px 10px; border-bottom: 1px solid #e5e7eb; text-align: left; }
+    th { background: #f3f4f6; font-weight: 700; }
+    .pass { color: #15803d; font-weight: 700; }
+    .fail { color: #dc2626; font-weight: 700; }
+    .summary { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px;
+               padding: 16px 20px; margin-top: 20px; }
+    .summary div { padding: 4px 0; font-size: 14px; }
+    .summary strong { display: inline-block; min-width: 120px; }
+  </style>
+</head>
+<body>
+  <h1>Kavach — Evaluation</h1>
+  <p>URL analyzer tested against 10 phishing + 10 legitimate URLs.</p>
+
+  <div id="phish-section"></div>
+  <div id="legit-section"></div>
+  <div id="summary" class="summary"></div>
+
+  <script type="module">
+    import { analyzeURL } from "../lib/url-analyzer.js";
+
+    const phishing = [
+      "http://hdfc-verify.tk/kyc",
+      "http://sbi-login-update.xyz/account",
+      "http://paypal-secure-verify.click/login",
+      "http://amazon-prize-winner.top/claim",
+      "http://fedex-customs-fee.bid/payment",
+      "http://icici-kyc-update.ml/verify",
+      "http://secure-hdfcbank.work/login",
+      "http://crypto-double-profit.bid/invest",
+      "http://lucky-draw-winner.ga/prize",
+      "http://axisbank-verify-account.tk/otp"
+    ];
+
+    const legitimate = [
+      "https://www.hdfcbank.com/personal/accounts",
+      "https://www.sbi.co.in/",
+      "https://www.paypal.com/in/signin",
+      "https://www.amazon.in/",
+      "https://www.fedex.com/en-in/home.html",
+      "https://www.icicibank.com/",
+      "https://www.axisbank.com/",
+      "https://www.google.com/",
+      "https://www.irctc.co.in/",
+      "https://www.flipkart.com/"
+    ];
+
+    let TP = 0, FP = 0, TN = 0, FN = 0;
+
+    function renderTable(title, rows, expectFlagged) {
+      let html = `<h2 style="font-family:-apple-system,sans-serif;font-size:16px;margin-top:24px">${title}</h2>`;
+      html += `<table><thead><tr><th>URL</th><th>Verdict</th><th>Score</th><th>Result</th></tr></thead><tbody>`;
+      for (const url of rows) {
+        const r = analyzeURL(url);
+        const flagged = r.level === "dangerous" || r.level === "suspicious";
+        const correct = expectFlagged ? flagged : !flagged;
+        if (expectFlagged) { if (flagged) TP++; else FN++; }
+        else { if (flagged) FP++; else TN++; }
+        html += `<tr>
+          <td>${url}</td>
+          <td>${r.level}</td>
+          <td>${Math.round(r.score * 100)}/100</td>
+          <td class="${correct ? "pass" : "fail"}">${correct ? "✅ correct" : "❌ miss"}</td>
+        </tr>`;
+      }
+      html += `</tbody></table>`;
+      return html;
+    }
+
+    document.getElementById("phish-section").innerHTML =
+      renderTable("Phishing set (expected: flagged)", phishing, true);
+    document.getElementById("legit-section").innerHTML =
+      renderTable("Legitimate set (expected: safe)", legitimate, false);
+
+    const precision = TP / (TP + FP) || 0;
+    const recall = TP / (TP + FN) || 0;
+    const accuracy = (TP + TN) / (TP + FP + TN + FN);
+    const f1 = (precision && recall) ? 2 * precision * recall / (precision + recall) : 0;
+
+    document.getElementById("summary").innerHTML = `
+      <h2 style="font-family:-apple-system,sans-serif;font-size:16px;margin:0 0 12px">Summary</h2>
+      <div><strong>TP:</strong> ${TP} &nbsp; <strong>FP:</strong> ${FP} &nbsp; <strong>TN:</strong> ${TN} &nbsp; <strong>FN:</strong> ${FN}</div>
+      <div><strong>Accuracy:</strong> ${(accuracy * 100).toFixed(1)}% (${TP + TN}/${TP + FP + TN + FN})</div>
+      <div><strong>Precision:</strong> ${(precision * 100).toFixed(1)}%</div>
+      <div><strong>Recall:</strong> ${(recall * 100).toFixed(1)}%</div>
+      <div><strong>F1:</strong> ${(f1 * 100).toFixed(1)}%</div>
+    `;
+
+    // Also dump to console as plain text
+    console.log(`TP:${TP} FP:${FP} TN:${TN} FN:${FN}`);
+    console.log(`Precision:${(precision*100).toFixed(1)}% Recall:${(recall*100).toFixed(1)}% Accuracy:${(accuracy*100).toFixed(1)}% F1:${(f1*100).toFixed(1)}%`);
+  </script>
+</body>
+</html>

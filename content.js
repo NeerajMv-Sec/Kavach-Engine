@@ -1,7 +1,92 @@
 (() => {
   let overlayShown = false;
-  let lastUrl = window.location.href;
-  let rescanTimer = null;
+
+  // Known-safe host patterns — regex for flexible matching.
+  const SAFE_HOST_PATTERNS = [
+    // Search engines
+    /(^|\.)google\.(com|co\.in|co\.uk)$/,
+    /(^|\.)bing\.com$/,
+    /(^|\.)duckduckgo\.com$/,
+    /(^|\.)yahoo\.com$/,
+    /(^|\.)yandex\.com$/,
+    /(^|\.)baidu\.com$/,
+    // Encyclopedias / dev
+    /(^|\.)wikipedia\.org$/,
+    /(^|\.)youtube\.com$/,
+    /(^|\.)youtu\.be$/,
+    /(^|\.)github\.com$/,
+    /(^|\.)gitlab\.com$/,
+    /(^|\.)stackoverflow\.com$/,
+    /(^|\.)reddit\.com$/,
+    /(^|\.)quora\.com$/,
+    // Social
+    /(^|\.)twitter\.com$/,
+    /(^|\.)x\.com$/,
+    /(^|\.)linkedin\.com$/,
+    /(^|\.)facebook\.com$/,
+    /(^|\.)instagram\.com$/,
+    // E-commerce
+    /(^|\.)amazon\.(com|in)$/,
+    /(^|\.)flipkart\.com$/,
+    // Travel / gov
+    /(^|\.)irctc\.co\.in$/,
+    /(^|\.)rbi\.org\.in$/,
+    /(^|\.)npci\.org\.in$/,
+    // All Indian banks on .bank.in TLD (RBI-mandated)
+    /\.bank\.in$/,
+    // Known Indian bank domains — covers all subdomains
+    /(^|\.)hdfcbank\.(com|co\.in)$/,
+    /(^|\.)icicibank\.(com|co\.in)$/,
+    /(^|\.)sbi\.co\.in$/,
+    /(^|\.)onlinesbi\.(sbi|com)$/,
+    /(^|\.)sbicard\.com$/,
+    /(^|\.)axisbank\.(com|co\.in)$/,
+    /(^|\.)kotak\.com$/,
+    /(^|\.)kotakbank\.com$/,
+    /(^|\.)yesbank\.in$/,
+    /(^|\.)indusind\.com$/,
+    /(^|\.)indusindbank\.com$/,
+    /(^|\.)pnbindia\.in$/,
+    /(^|\.)bankofbaroda\.(in|co\.in|com)$/,
+    /(^|\.)canarabank\.(com|in)$/,
+    /(^|\.)idfcfirstbank\.com$/,
+    /(^|\.)idfcbank\.com$/,
+    /(^|\.)unionbankofindia\.(co\.in|com)$/,
+    /(^|\.)centralbankofindia\.co\.in$/,
+    /(^|\.)iob\.in$/,
+    /(^|\.)ucobank\.com$/,
+    /(^|\.)federalbank\.co\.in$/,
+    /(^|\.)southindianbank\.com$/,
+    /(^|\.)karnatakabank\.com$/,
+    /(^|\.)dcbbank\.com$/,
+    /(^|\.)rblbank\.com$/,
+    /(^|\.)bandhanbank\.com$/,
+    /(^|\.)aubank\.in$/,
+    /(^|\.)equitasbank\.com$/,
+    /(^|\.)ujjivansfb\.in$/,
+    /(^|\.)paytm\.com$/,
+    /(^|\.)phonepe\.com$/,
+    /(^|\.)mobikwik\.com$/,
+    /(^|\.)zerodha\.com$/,
+    /(^|\.)groww\.in$/,
+    /(^|\.)upstox\.com$/,
+    /(^|\.)angelone\.in$/,
+    /(^|\.)hdfcsec\.com$/,
+    /(^|\.)icicidirect\.com$/
+  ];
+
+  function isSafeHost() {
+    try {
+      const host = window.location.hostname.toLowerCase();
+      if (!host) return false;
+      for (const pattern of SAFE_HOST_PATTERNS) {
+        if (pattern.test(host)) return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  }
 
   function escapeHtml(value) {
     return String(value).replace(/[&<>"']/g, (ch) => {
@@ -72,11 +157,6 @@
     }
   }
 
-  function removeOverlay() {
-    const el = document.getElementById("kavach-overlay");
-    if (el) el.remove();
-  }
-
   function showOverlay(verdict) {
     if (overlayShown) return;
     if (!verdict || (verdict.level !== "suspicious" && verdict.level !== "dangerous")) return;
@@ -138,6 +218,7 @@
   }
 
   function runScan() {
+    if (isSafeHost()) return;
     isTrusted((trusted) => {
       if (trusted) return;
       const url = getAnalyzeUrl();
@@ -146,42 +227,5 @@
     });
   }
 
-  function handleNavigation() {
-    const currentUrl = window.location.href;
-    if (currentUrl === lastUrl) return;
-    lastUrl = currentUrl;
-
-    // Clear any existing overlay so a new one can fire
-    removeOverlay();
-    overlayShown = false;
-
-    // Debounce — wait for the SPA to render its content before rescanning
-    if (rescanTimer) clearTimeout(rescanTimer);
-    rescanTimer = setTimeout(runScan, 400);
-  }
-
-  function installNavigationHooks() {
-    // Native events — browser back/forward and hash changes
-    window.addEventListener("popstate", handleNavigation);
-    window.addEventListener("hashchange", handleNavigation);
-
-    // Patch pushState and replaceState — used by React Router, Vue Router, etc.
-    const wrap = (method) => {
-      const original = history[method];
-      if (typeof original !== "function") return;
-      history[method] = function () {
-        const ret = original.apply(this, arguments);
-        // Fire after the state change is applied
-        setTimeout(handleNavigation, 0);
-        return ret;
-      };
-    };
-    wrap("pushState");
-    wrap("replaceState");
-  }
-
-  // --- Initial run ---
-  lastUrl = window.location.href;
-  installNavigationHooks();
   ensureBody(runScan);
 })();

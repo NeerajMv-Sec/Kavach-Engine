@@ -96,6 +96,9 @@ function render(lang) {
         <p>${escapeHtml(t(lang, "riskScore", { score: score100 }))}</p>
       </div>
     </div>
+    <div class="score-bar">
+      <div class="score-fill ${escapeHtml(level)}" style="width: ${score100}%"></div>
+    </div>
     ${cat}
     <div class="urlbox">${escapeHtml(displayUrl)}</div>
     <section class="section">

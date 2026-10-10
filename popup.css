@@ -242,3 +242,21 @@ body {
 .lang-toggle:hover {
   background: rgba(255, 255, 255, 0.16);
 }
+
+.score-bar {
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 999px;
+  margin: 12px 0;
+  overflow: hidden;
+}
+
+.score-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s;
+}
+
+.score-fill.safe { background: #15803d; }
+.score-fill.suspicious { background: #d97706; }
+.score-fill.dangerous { background: #dc2626; }
