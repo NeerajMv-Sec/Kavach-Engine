@@ -48,7 +48,7 @@ Verdict + Reasons
 ### 1. Clone this repository
 
 ```bash
-git clone https://github.com/yourusername/kavach.git
+git clone https://github.com/NeerajMv-Sec/Kavach-Engine.git
 cd kavach
 ```
 
