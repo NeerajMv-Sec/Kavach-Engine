@@ -189,6 +189,25 @@ DANGEROUS — Risk score 91/100
 * Opt-in cloud threat-intel, signed rule updates
 * Federated learning + local API for third-party tools
 
+## Evaluation
+
+Tested on 20 URLs — 10 phishing samples, 10 legitimate Indian sites.
+
+| Metric | Value |
+|---|---|
+| Accuracy | 17/20 (85.0%) |
+| Precision | 76.9% |
+| Recall | 100.0% |
+| F1 | 87.0% |
+| False positives | 3/10 |
+| False negatives | 0/10 |
+
+Reproducible: `tests/evaluation.html`. Each URL is scored directly by `url-analyzer.js`; a detection counts as correct when the verdict is `suspicious` or `dangerous`.
+
+### Known false positives
+
+`hdfcbank.com`, `icicibank.com`, and `axisbank.com` are flagged as suspicious. The cause is substring overlap between short brand tokens (`hdfc`, `icici`, `axis`) and legitimate registered domains that contain them as prefixes (`hdfcbank`, `icicibank`, `axisbank`). Fix: allowlist known legitimate financial domains, and expand the brand matching to distinguish prefixes from impersonations. This is the next iteration.
+
 ## Team
 
 **DEADSEC** — Code Carnival 3.0 · Atmiya University
